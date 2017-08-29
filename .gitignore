@@ -1,0 +1,22 @@
+# Models
+*.prototxt
+*.caffemodel
+
+# Compiled/cached Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporaries
+.ipynb_checkpoints/
+
+# Outputs
+*.png
+*.svg
+*.eps
+*.out
+
+# Kate's random crap
+src/train_scripts/*
+src/deprecated/*
+
