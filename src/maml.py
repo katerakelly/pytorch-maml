@@ -10,16 +10,15 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 from torch.nn import Parameter
-from torch.utils.data import DataLoader
 from torch.optim import SGD, Adam
-import torchvision.transforms as transforms
-from torch.nn.modules.loss import CrossEntropyLoss, NLLLoss
+from torch.nn.modules.loss import CrossEntropyLoss
 
 from task import OmniglotTask, MNISTTask
 from dataset import Omniglot, MNIST
 from inner_loop import InnerLoop
 from omniglot_net import OmniglotNet
-from net_helpers import *
+from score import *
+from data_loading import *
 
 
 class MetaLearner(object):
@@ -33,20 +32,18 @@ class MetaLearner(object):
                 inner_step_size,
                 num_updates, 
                 num_inner_updates,
-                loss_fn, 
-                DEBUG):
+                loss_fn):
         super(self.__class__, self).__init__()
         self.dataset = dataset
         self.num_classes = num_classes
         self.num_inst = num_inst
         self.meta_batch_size = meta_batch_size
         self.meta_step_size = meta_step_size
-        self.inner_batch_size = inner_batch_size / self.num_classes
+        self.inner_batch_size = inner_batch_size
         self.inner_step_size = inner_step_size
         self.num_updates = num_updates
         self.num_inner_updates = num_inner_updates
         self.loss_fn = loss_fn
-        self.DEBUG = DEBUG
         
         # Make the nets
         #TODO: don't actually need two nets
@@ -68,18 +65,14 @@ class MetaLearner(object):
 
     def meta_update(self, task, ls):
         print '\n Meta update \n'
-        #print 'before meta update', self.net.weights['fc.weight'].data.cpu().numpy()[:5,:5]
         loader = get_data_loader(task, self.inner_batch_size, split='val')
         in_, target = loader.__iter__().next()
         # We use a dummy forward / backward pass to get the correct grads into self.net
         loss, out = forward_pass(self.net, in_, target)
         # Unpack the list of grad dicts
         gradients = {k: sum(d[k] for d in ls) for k in ls[0].keys()}
-        #print 'summed grads', gradients['fc.weight'].data.cpu().numpy()[:5,:5]
         # Register a hook on each parameter in the net that replaces the current dummy grad
         # with our grads accumulated across the meta-batch
-        def print_stuff(var):
-            print var.data.cpu().numpy().shape
         hooks = []
         for (k,v) in self.net.named_parameters():
             def get_closure():
@@ -138,7 +131,7 @@ class MetaLearner(object):
         return mtr_loss, mtr_acc, mval_loss, mval_acc
 
     def _train(self, exp):
-        ''' debugging function: learn one task '''
+        ''' debugging function: learn two tasks '''
         task1 = self.get_task('../data/{}'.format(self.dataset), self.num_classes, self.num_inst)
         task2 = self.get_task('../data/{}'.format(self.dataset), self.num_classes, self.num_inst)
         for it in range(self.num_updates):
@@ -146,10 +139,7 @@ class MetaLearner(object):
             for task in [task1, task2]:
                 # Make sure fast net always starts with base weights
                 self.fast_net.copy_weights(self.net)
-                #TODO: attempt at parallelism
-                #parallel_net = nn.DataParallel(self.fast_net, [0, 1])
-                #_, g = parallel_net(Variable(torch.ones(4,1)), task)
-                _, g = self.fast_net.forward(Variable(torch.ones(4,1)),task)
+                _, g = self.fast_net.forward(task)
                 grads.append(g)
             self.meta_update(task, grads)
             
@@ -168,9 +158,8 @@ class MetaLearner(object):
             tloss, tacc, vloss, vacc = 0.0, 0.0, 0.0, 0.0
             for i in range(self.meta_batch_size):
                 task = self.get_task('../data/{}'.format(self.dataset), self.num_classes, self.num_inst)
-                #print zip(task.train_ids, task.train_labels)
                 self.fast_net.copy_weights(self.net)
-                metrics, g = self.fast_net.forward(Variable(torch.ones(4,1)), task)
+                metrics, g = self.fast_net.forward(task)
                 (trl, tra, vall, vala) = metrics
                 grads.append(g)
                 tloss += trl
@@ -214,8 +203,7 @@ class MetaLearner(object):
 @click.option('--lr',type=str)
 @click.option('--meta_lr', type=str)
 @click.option('--gpu', default=0)
-@click.option('--debug', default=0)
-def main(exp, dataset, num_cls, num_inst, batch, m_batch, num_updates, num_inner_updates, lr, meta_lr, gpu, debug):
+def main(exp, dataset, num_cls, num_inst, batch, m_batch, num_updates, num_inner_updates, lr, meta_lr, gpu):
     random.seed(1337)
     np.random.seed(1337)
     setproctitle(exp)
@@ -235,7 +223,7 @@ def main(exp, dataset, num_cls, num_inst, batch, m_batch, num_updates, num_inner
     print 'Setting GPU to', str(gpu)
     os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
     loss_fn = CrossEntropyLoss() 
-    learner = MetaLearner(dataset, num_cls, num_inst, m_batch, float(meta_lr), batch, float(lr), num_updates, num_inner_updates, loss_fn, bool(debug))
+    learner = MetaLearner(dataset, num_cls, num_inst, m_batch, float(meta_lr), batch, float(lr), num_updates, num_inner_updates, loss_fn)
     learner.train(exp)
 
 if __name__ == '__main__':

@@ -1,11 +1,13 @@
 import numpy as np
 
 import torch
-from torch.nn.backends.thnn import backend 
-from torch.nn import _functions
 from torch.nn import functional as F
-from torch.autograd.function import Function
-from torch.autograd import Variable
+
+'''
+Functional definitions of common layers
+Useful for when weights are exposed rather 
+than being contained in modules
+'''
 
 def linear(input, weight, bias=None):
     if bias is None:

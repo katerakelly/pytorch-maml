@@ -5,14 +5,13 @@ from PIL import Image
 import torch
 import torch.utils.data as data
 
-
-class Omniglot(data.Dataset):
+class FewShotDataset(data.Dataset):
     """
     Load image-label pairs from a task to pass to Torch DataLoader
     Tasks consist of data and labels split into train / val splits
     """
     
-    def __init__(self, task, split='train', seed=1337, transform=None, target_transform=None):
+    def __init__(self, task, split='train', transform=None, target_transform=None):
         self.transform = transform # Torch operations on the input image
         self.target_transform = target_transform
         self.task = task
@@ -20,9 +19,17 @@ class Omniglot(data.Dataset):
         self.split = split
         self.img_ids = self.task.train_ids if self.split == 'train' else self.task.val_ids
         self.labels = self.task.train_labels if self.split == 'train' else self.task.val_labels
-    
+
     def __len__(self):
         return len(self.img_ids)
+
+    def __getitem__(self, idx):
+        raise NotImplementedError("This is an abstract class. Subclass this class for your particular dataset.")
+
+class Omniglot(FewShotDataset):
+   
+    def __init__(self, *args, **kwargs):
+        super(Omniglot, self).__init__(*args, **kwargs)
     
     def load_image(self, idx):
         ''' Load image '''
@@ -43,22 +50,14 @@ class Omniglot(data.Dataset):
         return im, label
 
 class MNIST(data.Dataset):
-    """
-    Load image-label pairs from a task to pass to Torch DataLoader
-    Tasks consist of data and labels split into train / val splits
-    """
     
-    def __init__(self, task, split='train', seed=1337, transform=None, target_transform=None):
-        self.transform = transform # Torch operations on the input image
-        self.target_transform = target_transform
-        self.task = task
-        self.root = self.task.root
-        self.split = split
-        self.img_ids = self.task.train_ids if self.split == 'train' else self.task.val_ids
-        self.labels = self.task.train_labels if self.split == 'train' else self.task.val_labels
+    def __init__(self, *args, **kwargs):
+        super(MNIST, self).__init__(*args, **kwargs)
     
     def load_image(self, idx):
         ''' Load image '''
+        # NOTE: we use the PNG dataset because meta-learning results in an error
+        # when using the bitmap dataset and PyTorch unpacker
         im = Image.open('{}/{}.png'.format(self.root, idx)).convert('RGB')
         im = np.array(im, dtype=np.float32)
         im = im / 255.
@@ -73,8 +72,3 @@ class MNIST(data.Dataset):
         if self.target_transform is not None:
             target = self.target_transform(target)
         return img, target
-
-    def __len__(self):
-        return len(self.labels)
-
-
