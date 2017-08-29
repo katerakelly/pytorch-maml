@@ -1,7 +1,3 @@
-# Models
-*.prototxt
-*.caffemodel
-
 # Compiled/cached Python
 __pycache__/
 *.py[cod]
@@ -9,6 +5,7 @@ __pycache__/
 
 # Temporaries
 .ipynb_checkpoints/
+*.swp
 
 # Outputs
 *.png
@@ -16,7 +13,6 @@ __pycache__/
 *.eps
 *.out
 
-# Kate's random crap
-src/train_scripts/*
-src/deprecated/*
-
+# Model and other data
+*.pth
+*.npy
