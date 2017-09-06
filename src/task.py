@@ -26,8 +26,6 @@ class OmniglotTask(object):
         random.shuffle(chars)
         classes = chars[:num_cls]
         labels = np.array(range(len(classes)))
-        # This line is for perumutations of a task
-        #np.random.shuffle(labels)
         labels = dict(zip(classes, labels)) 
         instances = dict()
         # Now sample from the chosen classes to create class-balanced train and val sets
@@ -63,26 +61,17 @@ class MNISTTask(object):
         self.root = root + '/' + split
         self.split = split
         all_ids = []
-        heldout_ids = []
         for i in range(10):
             d = os.path.join(root, self.split, str(i))
             files = os.listdir(d)
-            ids = [ str(i) + '/' + f[:-4] for f in files]
+            ids.append([ str(i) + '/' + f[:-4] for f in files])
 
-            # TODO: leaving out the first 10k train examples and 5k test examples for the online training experiment
-            if self.split == 'train':
-                heldout_ids.append(ids[:1000])
-                all_ids.append(ids[1000:])
-            else:
-                heldout_ids.append(ids[:500])
-                all_ids.append(ids[500:])
         # To create a task, we randomly shuffle the labels
         self.label_map = dict(zip(range(10), np.random.permutation(np.array(range(10)))))
         
-        # Choose num_inst ids from each class
+        # Choose num_inst ids from each of 10 classes
         self.train_ids = []
         self.val_ids = []
-        # TODO: only supporting 10 classes
         for i in range(10):
             permutation = list(np.random.permutation(np.array(range(len(all_ids[i]))))[:num_inst*2])
             self.train_ids += [all_ids[i][j] for j in permutation[:num_inst]]
@@ -90,8 +79,6 @@ class MNISTTask(object):
             self.val_ids += [all_ids[i][j] for j in permutation[num_inst:]]
             self.val_labels = self.relabel(self.val_ids)
 
-        #print 'num train', len(self.train_ids)
-        #print 'num val', len(self.val_ids)
     def relabel(self, img_ids):
         ''' Remap labels to new label map for this task '''
         orig_labels = [int(x[0]) for x in img_ids]

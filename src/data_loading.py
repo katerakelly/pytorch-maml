@@ -35,9 +35,11 @@ class ClassBalancedSampler(Sampler):
 def get_data_loader(task, batch_size=1, split='train'):
     # NOTE: batch size here is # instances PER CLASS
     if task.dataset == 'mnist':
-        dset = MNIST(task, transform=transforms.ToTensor(), split=split) 
+        normalize = transforms.Normalize(mean=[0.13066, 0.13066, 0.13066], std=[0.30131, 0.30131, 0.30131])
+        dset = MNIST(task, transform=transforms.Compose([transforms.ToTensor(), normalize]), split=split) 
     else:
-        dset = Omniglot(task, transform=transforms.ToTensor(), split=split) 
+        normalize = transforms.Normalize(mean=[0.92206, 0.92206, 0.92206], std=[0.08426, 0.08426, 0.08426])
+        dset = Omniglot(task, transform=transforms.Compose([transforms.ToTensor(), normalize]), split=split) 
     if split == 'train':
         sampler = ClassBalancedSampler(batch_size, task.num_cl, task.num_inst)
         loader = DataLoader(dset, batch_size=batch_size*task.num_cl, sampler=sampler, num_workers=1, pin_memory=True)
