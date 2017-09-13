@@ -1,4 +1,4 @@
-
+exp='maml-omniglot-5way-1shot-TEST'
 dataset='omniglot'
 num_cls=5
 num_inst=1
