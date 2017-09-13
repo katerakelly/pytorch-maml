@@ -15,6 +15,10 @@ class OmniglotTask(object):
 
     def __init__(self, root, num_cls, num_inst, split='train'):
         self.dataset = 'omniglot'
+
+        root = '/data/ajabri/'
+        if not os.path.exists(root):
+            root = '/project/eecs/efros/ajabri/'
         self.root = '{}/images_background'.format(root) if split == 'train' else '{}/images_evaluation'.format(root)
         self.num_cl = num_cls
         self.num_inst = num_inst
@@ -64,7 +68,7 @@ class MNISTTask(object):
         for i in range(10):
             d = os.path.join(root, self.split, str(i))
             files = os.listdir(d)
-            ids.append([ str(i) + '/' + f[:-4] for f in files])
+            all_ids.append([ str(i) + '/' + f[:-4] for f in files])
 
         # To create a task, we randomly shuffle the labels
         self.label_map = dict(zip(range(10), np.random.permutation(np.array(range(10)))))

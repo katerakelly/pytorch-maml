@@ -28,8 +28,12 @@ def batchnorm(input, weight=None, bias=None, running_mean=None, running_var=None
     ''' momentum = 1 restricts stats to the current mini-batch '''
     # This hack only works when momentum is 1 and avoids needing to track running stats
     # by substuting dummy variables
-    running_mean = torch.zeros(np.prod(np.array(input.data.size()[1]))).cuda()
-    running_var = torch.ones(np.prod(np.array(input.data.size()[1]))).cuda()
+    # running_mean = torch.zeros(np.prod(np.array(input.data.size()[1]))).cuda()
+    # running_var = torch.ones(np.prod(np.array(input.data.size()[1]))).cuda()
+
+    running_mean = torch.zeros(input.data.size()[1]).cuda()
+    running_var = torch.ones(input.data.size()[1]).cuda()
+    
     return F.batch_norm(input, running_mean, running_var, weight, bias, training, momentum, eps)
 
 def bilinear_upsample(in_, factor):
