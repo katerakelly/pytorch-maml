@@ -42,7 +42,7 @@ def get_data_loader(task, batch_size=1, split='train'):
         dset = Omniglot(task, transform=transforms.Compose([transforms.ToTensor(), normalize]), split=split) 
     if split == 'train':
         sampler = ClassBalancedSampler(batch_size, task.num_cl, task.num_inst)
-        loader = DataLoader(dset, batch_size=batch_size*task.num_cl, sampler=sampler, num_workers=1, pin_memory=True)
+        loader = DataLoader(dset, batch_size=batch_size*task.num_cl, sampler=sampler, num_workers=0, pin_memory=True)
     else:
-        loader = DataLoader(dset, batch_size=batch_size*task.num_cl, shuffle=False, num_workers=1, pin_memory=True)
+        loader = DataLoader(dset, batch_size=batch_size*task.num_cl, shuffle=False, num_workers=0, pin_memory=True)
     return loader
