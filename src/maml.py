@@ -52,7 +52,7 @@ class MetaLearner(object):
         self.net.cuda()
         self.fast_net = InnerLoop(num_classes, self.loss_fn, self.num_inner_updates, self.inner_step_size, self.inner_batch_size, self.meta_batch_size, num_input_channels)
         self.fast_net.cuda()
-        self.opt = Adam(self.net.parameters())
+        self.opt = Adam(self.net.parameters(), lr=meta_step_size)
             
     def get_task(self, root, n_cl, n_inst, split='train'):
         if 'mnist' in root:
