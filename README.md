@@ -1,11 +1,11 @@
 # pytorch-maml
-This is a PyTorch implementation of the supervised learning experiments from the paper 
+This is a PyTorch implementation of the supervised learning experiments from the paper
 Model-Agnostic Meta-Learning (MAML): https://arxiv.org/abs/1703.03400
 
-*Important*: You will need the latest version of PyTorch, v.0.2.0 to run this code (otherwise you will get errors about 
+*Important*: You will need the latest version of PyTorch, v.0.2.0 to run this code (otherwise you will get errors about
 double backwards not being supported).
 
-Currently, only the Omniglot experiments have been replicated here. The hyper-parameters are the same as those used in the original 
+Currently, only the Omniglot experiments have been replicated here. The hyper-parameters are the same as those used in the original
 Tensorflow implementation, except that only 1 random seed is used here.
 
 5-way 1-shot training, best performance 98.9%
@@ -23,3 +23,11 @@ The 5-way results are achieved by simply meta-testing the network trained on the
 
 This repo also contains code for running maml experiments on permuted MNIST (tasks are created by shuffling the labels).
 This is a nice sanity check task.
+
+### license
+This software is distributed under the MIT license.
+
+### to-do
+ - [ ] port to pytorch 0.4 from 0.2 and python 3 from 2
+ - [ ] investigate performance difference from TF version
+ - [ ] add first-order version
